@@ -66,6 +66,38 @@ class CommentIpLocationFilterPolicyTest {
     }
 
     @Test
+    fun `administrative suffixes are stripped from typed region names`() {
+        assertEquals("北京", canonicalizeCommentRegion("北京市"))
+        assertEquals("广东", canonicalizeCommentRegion("广东省"))
+        assertEquals("重庆", canonicalizeCommentRegion("重庆市"))
+        assertEquals("台湾", canonicalizeCommentRegion("台湾省"))
+        assertEquals("内蒙古", canonicalizeCommentRegion("内蒙古自治区"))
+        assertEquals("西藏", canonicalizeCommentRegion("西藏自治区"))
+        assertEquals("新疆", canonicalizeCommentRegion("新疆维吾尔自治区"))
+        assertEquals("广西", canonicalizeCommentRegion("广西壮族自治区"))
+        assertEquals("宁夏", canonicalizeCommentRegion("宁夏回族自治区"))
+        assertEquals("香港", canonicalizeCommentRegion("香港特别行政区"))
+        assertEquals("澳门", canonicalizeCommentRegion("澳门特别行政区"))
+        assertEquals("香港", canonicalizeCommentRegion("中国香港特别行政区"))
+    }
+
+    @Test
+    fun `a bare suffix is never collapsed to an empty region`() {
+        // 「市」/「省」单独出现时不剥离，避免归一化成空串后让该条目静默失效。
+        assertEquals("市", canonicalizeCommentRegion("市"))
+        assertEquals("省", canonicalizeCommentRegion("省"))
+    }
+
+    @Test
+    fun `typed suffix entries match the location bilibili returns`() {
+        val filter = buildCommentLocationFilter(enabled = true, rawWhitelist = "北京市、广东省")
+        assertEquals(setOf("北京", "广东"), filter.regions)
+        assertFalse(shouldHideCommentByRegion("IP属地：北京", filter))
+        assertFalse(shouldHideCommentByRegion("IP属地：广东", filter))
+        assertTrue(shouldHideCommentByRegion("IP属地：上海", filter))
+    }
+
+    @Test
     fun `filter stays inactive when disabled or the whitelist is empty`() {
         val disabled = buildCommentLocationFilter(enabled = false, rawWhitelist = "北京")
         val empty = buildCommentLocationFilter(enabled = true, rawWhitelist = "  ")

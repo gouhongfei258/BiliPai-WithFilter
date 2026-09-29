@@ -33,6 +33,17 @@ private val COMMENT_WHITELIST_SEPARATORS = charArrayOf(
     '\n', '\r', ',', '，', '、', ';', '；', '|', ' ', '\t'
 )
 
+/** 行政区划后缀，按长度从长到短排列，避免「特别行政区」被「自治区」抢先匹配。 */
+private val COMMENT_REGION_SUFFIXES = listOf(
+    "特别行政区",
+    "维吾尔自治区",
+    "壮族自治区",
+    "回族自治区",
+    "自治区",
+    "省",
+    "市"
+)
+
 /** 从原始属地字符串中提取地区，形如 `IP属地：北京` -> `北京`；解析不出时返回 null。 */
 internal fun extractCommentRegion(location: String?): String? {
     if (location.isNullOrBlank()) return null
@@ -45,13 +56,23 @@ internal fun extractCommentRegion(location: String?): String? {
 }
 
 /**
- * 地区别名归一化：B 站对港澳台返回「中国香港 / 中国澳门 / 中国台湾」，
- * 允许用户只写「香港 / 澳门 / 台湾」，境内省份与海外地区名原样返回。
+ * 剥掉行政区划后缀：手打的「北京市 / 广东省 / 新疆维吾尔自治区」与 B 站返回的「北京 / 广东 / 新疆」等价。
+ * 仅在后缀短于整个地区名时剥离，避免把单独输入的「市」削成空串。
+ */
+private fun stripCommentRegionSuffix(region: String): String {
+    val suffix = COMMENT_REGION_SUFFIXES.firstOrNull { region.length > it.length && region.endsWith(it) }
+    return if (suffix == null) region else region.removeSuffix(suffix)
+}
+
+/**
+ * 地区别名归一化：剥掉「中国」前缀与行政区划后缀，使 B 站对港澳台返回的
+ * 「中国香港 / 中国澳门 / 中国台湾」与用户手写的「香港 / 澳门 / 台湾 / 香港特别行政区」都能互相匹配；
+ * 境内省份与海外地区名本身不含后缀时原样返回。
  */
 internal fun canonicalizeCommentRegion(region: String): String {
     val trimmed = region.trim()
     if (trimmed.isEmpty()) return trimmed
-    return trimmed.removePrefix("中国").trim().ifEmpty { trimmed }
+    return stripCommentRegionSuffix(trimmed.removePrefix("中国").trim()).ifEmpty { trimmed }
 }
 
 /** 单条白名单输入归一化：先剥属地前缀，再做别名归一化；解析不出时返回 null。 */
