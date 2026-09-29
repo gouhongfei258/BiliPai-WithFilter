@@ -6,6 +6,7 @@ import android.provider.OpenableColumns
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.android.purebilibili.core.network.NetworkModule
+import com.android.purebilibili.core.store.SettingsManager
 import com.android.purebilibili.data.model.CommentFraudStatus
 import com.android.purebilibili.data.model.response.ReplyData
 import com.android.purebilibili.data.model.response.ReplyItem
@@ -13,11 +14,17 @@ import com.android.purebilibili.data.model.response.ReplyPage
 import com.android.purebilibili.data.model.response.ReplyPicture
 import com.android.purebilibili.data.repository.CommentRepository
 import com.android.purebilibili.data.repository.CommentFraudRepository
+import com.android.purebilibili.data.repository.CommentLocationFilter
+import com.android.purebilibili.data.repository.buildCommentLocationFilter
+import com.android.purebilibili.data.repository.filterCommentsByRegion
 import com.android.purebilibili.data.repository.shouldStartCommentFraudDetection
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asSharedFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.Dispatchers
@@ -117,7 +124,9 @@ data class CommentUiState(
     // [新增] 评论反诈检测状态
     val isDetectingFraud: Boolean = false,
     val fraudDetectResult: CommentFraudStatus? = null,
-    val fraudDetectRpid: Long = 0  // 被检测的评论 rpid
+    val fraudDetectRpid: Long = 0,  // 被检测的评论 rpid
+    // [新增] 被 IP 属地白名单过滤掉的已加载评论数
+    val filteredReplyCount: Int = 0
 )
 
 // 二级评论状态 (从 VideoPlaybackViewModel 移过来)
@@ -140,7 +149,9 @@ data class SubReplyUiState(
     val conversationAnchor: ReplyItem? = null,
     val targetReplyId: Long = 0,
     // [新增] 消散动画状态
-    val dissolvingIds: ImmutableSet<Long> = persistentSetOf()
+    val dissolvingIds: ImmutableSet<Long> = persistentSetOf(),
+    // [新增] 被 IP 属地白名单过滤掉的已加载子评论数
+    val filteredItemCount: Int = 0
 )
 
 internal fun resolveSubReplyRemoteTotalCount(
@@ -229,11 +240,44 @@ internal fun shouldStartRoutedSubReplyOpen(
 
 class VideoCommentViewModel : ViewModel() {
     private val _commentState = MutableStateFlow(CommentUiState())
-    val commentState = _commentState.asStateFlow()
 
     private var subReplyLoadJob: Job? = null
     private val _subReplyState = MutableStateFlow(SubReplyUiState())
-    val subReplyState = _subReplyState.asStateFlow()
+
+    // [新增] IP 属地白名单过滤条件，由设置驱动
+    private val locationFilter = MutableStateFlow(CommentLocationFilter.INACTIVE)
+
+    init {
+        val appContext = NetworkModule.appContext
+        if (appContext != null) {
+            viewModelScope.launch {
+                combine(
+                    SettingsManager.getCommentIpWhitelistEnabled(appContext),
+                    SettingsManager.getCommentIpWhitelistRaw(appContext)
+                ) { enabled, raw -> buildCommentLocationFilter(enabled, raw) }
+                    .distinctUntilChanged()
+                    .collect { locationFilter.value = it }
+            }
+        }
+    }
+
+    // 公开状态由「原始状态 + 白名单」派生：所有渲染点自动生效，
+    // 内部逻辑仍只读写 _commentState / _subReplyState，分页、合并与交互逻辑不受影响。
+    val commentState = combine(_commentState, locationFilter) { state, filter ->
+        val result = filterCommentsByRegion(state.replies, filter)
+        state.copy(
+            replies = result.items.toImmutableList(),
+            filteredReplyCount = result.hiddenCount
+        )
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), CommentUiState())
+
+    val subReplyState = combine(_subReplyState, locationFilter) { state, filter ->
+        val result = filterCommentsByRegion(state.items, filter)
+        state.copy(
+            items = result.items.toImmutableList(),
+            filteredItemCount = result.hiddenCount
+        )
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), SubReplyUiState())
 
     // [新增] 评论反诈检测事件流（one-shot event）
     private val _fraudEvent = MutableSharedFlow<CommentFraudStatus>(extraBufferCapacity = 1)
@@ -337,7 +381,9 @@ class VideoCommentViewModel : ViewModel() {
                 page = pageToLoad, 
                 ps = 20,
                 mode = currentState.sortMode.apiMode,
-                paginationOffset = currentState.grpcNextOffset
+                paginationOffset = currentState.grpcNextOffset,
+                // 仅在白名单生效时才为「属地缺失」多花一次 REST 回退，确保能拿到 IP 属地
+                fallbackOnMissingLocation = locationFilter.value.isActive
             )
 
             result.onSuccess { data ->

@@ -17,6 +17,7 @@ class SettingsSubpageChromeStructureTest {
         "app/src/main/java/com/android/purebilibili/feature/settings/screen/PluginsScreen.kt",
         "app/src/main/java/com/android/purebilibili/feature/settings/screen/IconSettingsScreen.kt",
         "app/src/main/java/com/android/purebilibili/feature/settings/screen/BlockedListScreen.kt",
+        "app/src/main/java/com/android/purebilibili/feature/settings/screen/CommentIpWhitelistScreen.kt",
         "app/src/main/java/com/android/purebilibili/feature/settings/screen/JsonPluginEditorScreen.kt",
         "app/src/main/java/com/android/purebilibili/feature/settings/screen/OpenSourceLicensesScreen.kt",
         "app/src/main/java/com/android/purebilibili/feature/settings/share/SettingsShareScreen.kt",

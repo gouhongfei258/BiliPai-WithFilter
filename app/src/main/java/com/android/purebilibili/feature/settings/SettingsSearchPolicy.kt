@@ -20,6 +20,7 @@ enum class SettingsSearchTarget {
     PERMISSION,
     MESSAGE_NOTIFICATION,
     BLOCKED_LIST,
+    COMMENT_IP_WHITELIST,
     SETTINGS_SHARE,
     WEBDAV_BACKUP,
     DOWNLOAD_PATH,
@@ -359,6 +360,16 @@ private val SETTINGS_SEARCH_INDEX: List<SettingsSearchEntry> = listOf(
         subtitle = settingsDestinationCopy(SettingsSearchTarget.BLOCKED_LIST).summary,
         section = "隐私与安全",
         aliases = listOf("黑名单", "屏蔽", "up", "拉黑", "屏蔽up", "已屏蔽up", "屏蔽用户")
+    ),
+    SettingsSearchEntry(
+        target = SettingsSearchTarget.COMMENT_IP_WHITELIST,
+        title = settingsDestinationCopy(SettingsSearchTarget.COMMENT_IP_WHITELIST).title,
+        subtitle = settingsDestinationCopy(SettingsSearchTarget.COMMENT_IP_WHITELIST).summary,
+        section = "隐私与安全",
+        aliases = listOf(
+            "IP属地", "ip属地", "归属地", "属地", "评论属地",
+            "评论过滤", "过滤评论", "评论地区", "地区白名单", "ip白名单"
+        )
     ),
     SettingsSearchEntry(
         target = SettingsSearchTarget.SETTINGS_SHARE,

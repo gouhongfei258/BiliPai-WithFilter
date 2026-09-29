@@ -16,6 +16,7 @@ internal enum class SettingsBackTarget {
     UPDATE_RESULT,
     CHANGELOG_RESULT,
     BLOCKED_LIST,
+    COMMENT_IP_WHITELIST,
 }
 
 internal data class SettingsBottomBarScrollState(
@@ -92,7 +93,9 @@ internal fun resolveSettingsBackTarget(
     showUpdateResult: Boolean = false,
     showChangelogResult: Boolean = false,
     showBlockedList: Boolean = false,
+    showCommentIpWhitelist: Boolean = false,
 ): SettingsBackTarget = when {
+    showCommentIpWhitelist -> SettingsBackTarget.COMMENT_IP_WHITELIST
     showBlockedList -> SettingsBackTarget.BLOCKED_LIST
     showChangelogResult -> SettingsBackTarget.CHANGELOG_RESULT
     showUpdateResult -> SettingsBackTarget.UPDATE_RESULT

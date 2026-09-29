@@ -184,6 +184,7 @@ fun DynamicDetailScreen(
     val likedDynamics by interactionViewModel.likedDynamics.collectAsStateWithLifecycle()
     val likeOverrides by interactionViewModel.likeOverrides.collectAsStateWithLifecycle()
     val comments by interactionViewModel.comments.collectAsStateWithLifecycle()
+    val filteredCommentCount by interactionViewModel.filteredCommentCount.collectAsStateWithLifecycle()
     val commentsLoading by interactionViewModel.commentsLoading.collectAsStateWithLifecycle()
     val commentsLoadingMore by interactionViewModel.commentsLoadingMore.collectAsStateWithLifecycle()
     val commentTotalCount by interactionViewModel.commentTotalCount.collectAsStateWithLifecycle()
@@ -431,6 +432,7 @@ fun DynamicDetailScreen(
                         comments = comments,
                         isLoading = commentsLoading,
                         isLoadingMore = commentsLoadingMore,
+                        filteredCommentCount = filteredCommentCount,
                         onViewReplies = { reply -> interactionViewModel.openSubReply(reply) },
                         onReply = { reply -> interactionViewModel.startCommentReply(reply) },
                         onLike = { reply -> interactionViewModel.likeComment(reply.rpid) },

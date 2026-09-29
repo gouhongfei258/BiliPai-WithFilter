@@ -1656,6 +1656,10 @@ private val KEY_APP_FONT_WEIGHT = intPreferencesKey("app_font_weight")
     private val KEY_COMMENT_DEFAULT_SORT_MODE = intPreferencesKey("comment_default_sort_mode")
     private val KEY_COMMENT_FRAUD_DETECTION_ENABLED =
         booleanPreferencesKey("comment_fraud_detection_enabled")
+    // 评论 IP 属地白名单：开启后仅显示白名单内地区的评论
+    private val KEY_COMMENT_IP_WHITELIST_ENABLED =
+        booleanPreferencesKey("comment_ip_whitelist_enabled")
+    private val KEY_COMMENT_IP_WHITELIST = stringPreferencesKey("comment_ip_whitelist")
     private val KEY_AUTO_CACHE_CLEAR_INTERVAL = intPreferencesKey("auto_cache_clear_interval_days")
     private val KEY_AUTO_CACHE_CLEAR_THRESHOLD_GB = intPreferencesKey("auto_cache_clear_threshold_gb")
     private val KEY_LAST_AUTO_CACHE_CLEAR_AT = longPreferencesKey("last_auto_cache_clear_at")
@@ -6104,6 +6108,28 @@ private val KEY_APP_FONT_WEIGHT = intPreferencesKey("app_font_weight")
         }
     }
 
+    // --- 评论 IP 属地白名单 ---
+    fun getCommentIpWhitelistEnabled(context: Context): Flow<Boolean> =
+        context.settingsDataStore.data
+            .map { preferences -> preferences[KEY_COMMENT_IP_WHITELIST_ENABLED] ?: false }
+
+    suspend fun setCommentIpWhitelistEnabled(context: Context, enabled: Boolean) {
+        context.settingsDataStore.edit { preferences ->
+            preferences[KEY_COMMENT_IP_WHITELIST_ENABLED] = enabled
+        }
+    }
+
+    /** 白名单原文；解析与规范化由 data 层的 CommentIpLocationFilterPolicy 负责。 */
+    fun getCommentIpWhitelistRaw(context: Context): Flow<String> =
+        context.settingsDataStore.data
+            .map { preferences -> preferences[KEY_COMMENT_IP_WHITELIST] ?: "" }
+
+    suspend fun setCommentIpWhitelistRaw(context: Context, value: String) {
+        context.settingsDataStore.edit { preferences ->
+            preferences[KEY_COMMENT_IP_WHITELIST] = value
+        }
+    }
+
     fun getAutoCacheClearInterval(context: Context): Flow<AutoCacheClearInterval> =
         context.settingsDataStore.data.map { preferences ->
             val days = preferences[KEY_AUTO_CACHE_CLEAR_INTERVAL] ?: AutoCacheClearInterval.NEVER.days
@@ -8015,6 +8041,8 @@ private val KEY_APP_FONT_WEIGHT = intPreferencesKey("app_font_weight")
             BooleanShareablePreferenceDefinition(KEY_REMEMBER_LAST_PLAYBACK_SPEED, SettingsShareSection.PLAYBACK),
             IntShareablePreferenceDefinition(KEY_COMMENT_DEFAULT_SORT_MODE, SettingsShareSection.PLAYBACK),
             BooleanShareablePreferenceDefinition(KEY_COMMENT_FRAUD_DETECTION_ENABLED, SettingsShareSection.PLAYBACK),
+            BooleanShareablePreferenceDefinition(KEY_COMMENT_IP_WHITELIST_ENABLED, SettingsShareSection.PLAYBACK),
+            StringShareablePreferenceDefinition(KEY_COMMENT_IP_WHITELIST, SettingsShareSection.PLAYBACK),
             BooleanShareablePreferenceDefinition(KEY_COMMENT_MEMBER_DECORATIONS_ENABLED, SettingsShareSection.PLAYBACK),
             BooleanShareablePreferenceDefinition(KEY_IMAGE_PREVIEW_LONG_PRESS_SAVE_ENABLED, SettingsShareSection.PLAYBACK),
             BooleanShareablePreferenceDefinition(KEY_IMAGE_PREVIEW_3D_PAGE_ENABLED, SettingsShareSection.PLAYBACK),

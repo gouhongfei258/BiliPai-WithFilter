@@ -56,6 +56,7 @@ private fun resolveIosSettingsEntryTint(
     SettingsSearchTarget.PERMISSION -> iOSTeal
     SettingsSearchTarget.MESSAGE_NOTIFICATION -> iOSBlue
     SettingsSearchTarget.BLOCKED_LIST -> iOSBlue
+    SettingsSearchTarget.COMMENT_IP_WHITELIST -> iOSPurple
     SettingsSearchTarget.SETTINGS_SHARE -> iOSGreen
     SettingsSearchTarget.WEBDAV_BACKUP -> iOSBlue
     SettingsSearchTarget.DOWNLOAD_PATH -> iOSBlue

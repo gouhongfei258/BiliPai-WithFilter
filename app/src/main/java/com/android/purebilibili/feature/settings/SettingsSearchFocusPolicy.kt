@@ -168,6 +168,7 @@ internal fun resolveSettingsSceneDetailFocus(
     SettingsSearchTarget.BOTTOM_BAR,
     SettingsSearchTarget.PERMISSION,
     SettingsSearchTarget.BLOCKED_LIST,
+    SettingsSearchTarget.COMMENT_IP_WHITELIST,
     SettingsSearchTarget.SETTINGS_SHARE,
     SettingsSearchTarget.WEBDAV_BACKUP,
     SettingsSearchTarget.DOWNLOAD_PATH,

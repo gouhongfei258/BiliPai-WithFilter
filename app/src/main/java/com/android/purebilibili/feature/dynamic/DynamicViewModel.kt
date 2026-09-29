@@ -24,7 +24,10 @@ import com.android.purebilibili.data.model.response.ReplyInteractionData
 import com.android.purebilibili.data.model.response.ReplyItem
 import com.android.purebilibili.data.repository.ActionRepository
 import com.android.purebilibili.data.repository.BlockedUpRepository
+import com.android.purebilibili.data.repository.CommentLocationFilter
 import com.android.purebilibili.data.repository.CommentRepository
+import com.android.purebilibili.data.repository.buildCommentLocationFilter
+import com.android.purebilibili.data.repository.filterCommentsByRegion
 import com.android.purebilibili.data.repository.DynamicCreateRepository
 import com.android.purebilibili.data.repository.DynamicFeedScope
 import com.android.purebilibili.data.repository.DynamicRepository
@@ -55,6 +58,8 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.flow.stateIn
@@ -134,6 +139,9 @@ class DynamicViewModel(application: Application) : AndroidViewModel(application)
 
     private val _isRefreshing = MutableStateFlow(false)
     val isRefreshing: StateFlow<Boolean> = _isRefreshing.asStateFlow()
+
+    // [新增] IP 属地白名单过滤条件，由设置驱动（在 init 中收集，需先于 init 块声明）
+    private val locationFilter = MutableStateFlow(CommentLocationFilter.INACTIVE)
     
     //  [修复] 分离时间线和用户页加载锁，避免互相阻塞
     private val activeTimelineRequestTokens = mutableMapOf<String, Long>()
@@ -173,6 +181,14 @@ class DynamicViewModel(application: Application) : AndroidViewModel(application)
             SettingsManager.getIncrementalTimelineRefresh(appContext).collect { enabled ->
                 incrementalTimelineRefreshEnabled = enabled
             }
+        }
+        viewModelScope.launch {
+            combine(
+                SettingsManager.getCommentIpWhitelistEnabled(appContext),
+                SettingsManager.getCommentIpWhitelistRaw(appContext)
+            ) { enabled, raw -> buildCommentLocationFilter(enabled, raw) }
+                .distinctUntilChanged()
+                .collect { locationFilter.value = it }
         }
         loadUserPreferences()
         loadNotInterestedDynamicIds()
@@ -970,16 +986,33 @@ class DynamicViewModel(application: Application) : AndroidViewModel(application)
             initialValue = null
         )
     
-    // 评论列表
+    // 评论列表：_comments 始终保存原始未过滤列表，分页合并与点赞点踩都基于它
     private val _comments = MutableStateFlow<List<com.android.purebilibili.data.model.response.ReplyItem>>(emptyList())
-    val comments: StateFlow<List<com.android.purebilibili.data.model.response.ReplyItem>> = _comments.asStateFlow()
+
+    // 公开评论列表由「原始列表 + 白名单」派生，评论区与内联列表自动生效
+    val comments: StateFlow<List<com.android.purebilibili.data.model.response.ReplyItem>> =
+        combine(_comments, locationFilter) { list, filter ->
+            filterCommentsByRegion(list, filter).items
+        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
+    val filteredCommentCount: StateFlow<Int> =
+        combine(_comments, locationFilter) { list, filter ->
+            filterCommentsByRegion(list, filter).hiddenCount
+        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), 0)
 
     private val _dynamicCommentSortMode = MutableStateFlow(CommentSortMode.HOT)
     val dynamicCommentSortMode: StateFlow<CommentSortMode> = _dynamicCommentSortMode.asStateFlow()
 
     private var subReplyLoadJob: Job? = null
     private val _subReplyState = MutableStateFlow(SubReplyUiState())
-    val subReplyState: StateFlow<SubReplyUiState> = _subReplyState.asStateFlow()
+    val subReplyState: StateFlow<SubReplyUiState> =
+        combine(_subReplyState, locationFilter) { state, filter ->
+            val result = filterCommentsByRegion(state.items, filter)
+            state.copy(
+                items = result.items.toImmutableList(),
+                filteredItemCount = result.hiddenCount
+            )
+        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), SubReplyUiState())
 
     private val _commentReplyTarget = MutableStateFlow<DynamicCommentComposerTarget?>(null)
     internal val commentReplyTarget: StateFlow<DynamicCommentComposerTarget?> = _commentReplyTarget.asStateFlow()

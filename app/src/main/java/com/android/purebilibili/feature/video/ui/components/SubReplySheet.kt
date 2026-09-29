@@ -123,7 +123,8 @@ fun SubReplySheet(
                     onUrlClick = onUrlClick,
                     showIdentityDecorations = showIdentityDecorations,
                     onAvatarClick = onAvatarClick,
-                    targetReplyId = state.targetReplyId
+                    targetReplyId = state.targetReplyId,
+                    filteredItemCount = state.filteredItemCount
                 )
             }
         }

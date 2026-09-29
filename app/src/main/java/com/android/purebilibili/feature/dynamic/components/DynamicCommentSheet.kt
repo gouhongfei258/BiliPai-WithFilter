@@ -75,6 +75,7 @@ import com.android.purebilibili.feature.dynamic.DynamicCommentSheetHostContent
 import com.android.purebilibili.feature.home.components.BottomBarMatchedReusableLiquidDock
 import com.android.purebilibili.feature.home.components.resolveFloatingDockGeometryScale
 import com.android.purebilibili.feature.home.components.resolveSharedBottomBarCapsuleShape
+import com.android.purebilibili.feature.video.ui.components.CommentIpFilterNotice
 import com.android.purebilibili.feature.video.ui.components.CommentPictures
 import com.android.purebilibili.feature.video.ui.components.RichCommentText
 import com.android.purebilibili.feature.video.ui.components.ReplyMemberAvatar
@@ -139,6 +140,7 @@ fun DynamicCommentOverlayHost(
     val commentsLoading by viewModel.commentsLoading.collectAsStateWithLifecycle()
     val commentsLoadingMore by viewModel.commentsLoadingMore.collectAsStateWithLifecycle()
     val subReplyState by viewModel.subReplyState.collectAsStateWithLifecycle()
+    val filteredCommentCount by viewModel.filteredCommentCount.collectAsStateWithLifecycle()
     val liveCommentCount by viewModel.commentTotalCount.collectAsStateWithLifecycle()
     val sortMode by viewModel.dynamicCommentSortMode.collectAsStateWithLifecycle()
     val replyTarget by viewModel.commentReplyTarget.collectAsStateWithLifecycle()
@@ -160,6 +162,7 @@ fun DynamicCommentOverlayHost(
 
         DynamicCommentSheet(
             comments = comments,
+            filteredCommentCount = filteredCommentCount,
             totalCount = totalCount,
             sortMode = sortMode,
             isLoading = commentsLoading,
@@ -238,6 +241,7 @@ fun DynamicCommentOverlayHost(
 fun DynamicCommentSheet(
     comments: List<ReplyItem>,
     totalCount: Int,  //  [新增] 总评论数
+    filteredCommentCount: Int = 0,
     sortMode: CommentSortMode = CommentSortMode.HOT,
     isLoading: Boolean,
     isLoadingMore: Boolean,
@@ -537,6 +541,11 @@ fun DynamicCommentSheet(
                         ),
                         verticalArrangement = Arrangement.spacedBy(AppSpacingTokens.Medium)
                     ) {
+                        if (filteredCommentCount > 0) {
+                            item(key = "dynamic_comment_ip_filter_notice") {
+                                CommentIpFilterNotice(hiddenCount = filteredCommentCount)
+                            }
+                        }
                         items(comments, key = { it.rpid }) { reply ->
                             ReplyItemView(
                                 item = reply,
@@ -629,6 +638,7 @@ fun DynamicCommentSheet(
                                 likedComments = likedThreadComments,
                                 onAvatarClick = { mid -> mid.toLongOrNull()?.let(onUserClick) },
                                 targetReplyId = subReplyState.targetReplyId,
+                                filteredItemCount = subReplyState.filteredItemCount,
                                 modifier = Modifier.fillMaxSize(),
                             )
                         }
@@ -766,6 +776,7 @@ fun LazyListScope.dynamicInlineCommentItems(
     comments: List<ReplyItem>,
     isLoading: Boolean,
     isLoadingMore: Boolean,
+    filteredCommentCount: Int = 0,
     onViewReplies: (ReplyItem) -> Unit,
     onReply: (ReplyItem) -> Unit = {},
     onLike: (ReplyItem) -> Unit = {},
@@ -797,23 +808,30 @@ fun LazyListScope.dynamicInlineCommentItems(
             }
         }
 
-        else -> items(comments, key = { it.rpid }) { reply ->
-            ReplyItemView(
-                item = reply,
-                onClick = { onViewReplies(reply) },
-                onSubClick = { root, _ -> onViewReplies(root) },
-                onReplyClick = { onReply(reply) },
-                onLikeClick = { onLike(reply) },
-                isLiked = isDynamicCommentLiked(reply),
-                onHateClick = { onHate(reply) },
-                isHated = reply.action == 2,
-                onDeleteClick = { onDelete(reply) },
-                onReportClick = { reason -> onReport(reply, reason) },
-                canToggleTop = dynamicAuthorMid > 0L,
-                onToggleTopClick = { onToggleTop(reply) },
-                onAvatarClick = { mid -> mid.toLongOrNull()?.let(onUserClick) },
-                onImagePreview = onImagePreview,
-            )
+        else -> {
+            if (filteredCommentCount > 0) {
+                item(key = "dynamic_inline_comment_ip_filter_notice") {
+                    CommentIpFilterNotice(hiddenCount = filteredCommentCount)
+                }
+            }
+            items(comments, key = { it.rpid }) { reply ->
+                ReplyItemView(
+                    item = reply,
+                    onClick = { onViewReplies(reply) },
+                    onSubClick = { root, _ -> onViewReplies(root) },
+                    onReplyClick = { onReply(reply) },
+                    onLikeClick = { onLike(reply) },
+                    isLiked = isDynamicCommentLiked(reply),
+                    onHateClick = { onHate(reply) },
+                    isHated = reply.action == 2,
+                    onDeleteClick = { onDelete(reply) },
+                    onReportClick = { reason -> onReport(reply, reason) },
+                    canToggleTop = dynamicAuthorMid > 0L,
+                    onToggleTopClick = { onToggleTop(reply) },
+                    onAvatarClick = { mid -> mid.toLongOrNull()?.let(onUserClick) },
+                    onImagePreview = onImagePreview,
+                )
+            }
         }
     }
     if (isLoadingMore) {

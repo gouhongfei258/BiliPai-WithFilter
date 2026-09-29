@@ -28,6 +28,7 @@ internal enum class SettingsIconRole {
     PERMISSION,
     MESSAGE_NOTIFICATION,
     BLOCKED_LIST,
+    COMMENT_IP_WHITELIST,
     SETTINGS_SHARE,
     WEBDAV_BACKUP,
     DOWNLOAD_PATH,
@@ -227,6 +228,7 @@ internal fun resolveSettingsMaterialSymbolResource(role: SettingsIconRole): Int 
     SettingsIconRole.PERMISSION -> R.drawable.ms_security_24
     SettingsIconRole.MESSAGE_NOTIFICATION -> R.drawable.ms_notifications_24
     SettingsIconRole.BLOCKED_LIST -> R.drawable.ms_block_24
+    SettingsIconRole.COMMENT_IP_WHITELIST -> R.drawable.ms_lan_24
     SettingsIconRole.SETTINGS_SHARE -> R.drawable.ms_share_24
     SettingsIconRole.WEBDAV_BACKUP -> R.drawable.ms_cloud_upload_24
     SettingsIconRole.DOWNLOAD_PATH -> R.drawable.ms_folder_24
@@ -428,6 +430,7 @@ internal fun resolveSettingsSearchTargetIconRole(
     SettingsSearchTarget.PERMISSION -> SettingsIconRole.PERMISSION
     SettingsSearchTarget.MESSAGE_NOTIFICATION -> SettingsIconRole.MESSAGE_NOTIFICATION
     SettingsSearchTarget.BLOCKED_LIST -> SettingsIconRole.BLOCKED_LIST
+    SettingsSearchTarget.COMMENT_IP_WHITELIST -> SettingsIconRole.COMMENT_IP_WHITELIST
     SettingsSearchTarget.SETTINGS_SHARE -> SettingsIconRole.SETTINGS_SHARE
     SettingsSearchTarget.WEBDAV_BACKUP -> SettingsIconRole.WEBDAV_BACKUP
     SettingsSearchTarget.DOWNLOAD_PATH -> SettingsIconRole.DOWNLOAD_PATH
@@ -497,6 +500,7 @@ internal fun resolveMiuixSettingsSemanticIcon(role: SettingsIconRole): ImageVect
     SettingsIconRole.PERMISSION -> MiuixIcons.Unlock
     SettingsIconRole.MESSAGE_NOTIFICATION -> MiuixIcons.Messages
     SettingsIconRole.BLOCKED_LIST -> MiuixIcons.Blocklist
+    SettingsIconRole.COMMENT_IP_WHITELIST -> MiuixIcons.WorldClock
     SettingsIconRole.SETTINGS_SHARE -> MiuixIcons.Share
     SettingsIconRole.WEBDAV_BACKUP -> MiuixIcons.UploadCloud
     SettingsIconRole.DOWNLOAD_PATH -> MiuixIcons.FileDownloads

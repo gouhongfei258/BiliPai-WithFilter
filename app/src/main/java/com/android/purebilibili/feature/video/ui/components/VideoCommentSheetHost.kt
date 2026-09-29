@@ -865,7 +865,8 @@ fun VideoCommentSheetHost(
                                             mid.toLongOrNull()?.let(onUserClick)
                                         },
                                         maxTimestampMs = maxTimestampMs,
-                                        targetReplyId = subReplyState.targetReplyId
+                                        targetReplyId = subReplyState.targetReplyId,
+                                        filteredItemCount = subReplyState.filteredItemCount
                                     )
                                 }
                             }
@@ -948,6 +949,12 @@ internal fun VideoCommentMainList(
                         .layerBackdrop(commentChromeBackdrop),
                     contentPadding = WindowInsets.navigationBars.asPaddingValues()
                 ) {
+                    if (state.filteredReplyCount > 0) {
+                        item(key = "comment_ip_filter_notice") {
+                            CommentIpFilterNotice(hiddenCount = state.filteredReplyCount)
+                        }
+                    }
+
                     item {
                         AppSurface(
                             modifier = Modifier
@@ -1079,4 +1086,27 @@ private fun NoMoreFooter() {
             fontWeight = FontWeight.Normal
         )
     }
+}
+
+/**
+ * 评论区的 IP 属地过滤提示条，视频与动态评论共用。
+ *
+ * [hiddenCount] 是当前**已加载条目**中被隐藏的条数，会随分页继续增长，
+ * 因此文案写「已按 IP 属地过滤 N 条评论」而不是「共过滤 N 条」。
+ */
+@Composable
+internal fun CommentIpFilterNotice(
+    hiddenCount: Int,
+    modifier: Modifier = Modifier,
+) {
+    if (hiddenCount <= 0) return
+    AppText(
+        text = "已按 IP 属地过滤 $hiddenCount 条评论",
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        tapToCopyEnabled = false,
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 6.dp),
+    )
 }

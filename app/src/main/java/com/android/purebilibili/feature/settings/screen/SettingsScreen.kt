@@ -205,6 +205,8 @@ fun SettingsScreen(
     var showBlockedList by remember { mutableStateOf(false) }
     // [新增] 发评反诈页面状态
     var showCommentFraudHistory by remember { mutableStateOf(false) }
+    // [新增] 评论 IP 属地白名单页面状态
+    var showCommentIpWhitelist by remember { mutableStateOf(false) }
     val installedBuildProvenance = remember { readInstalledAppBuildProvenance() }
 
     // Effects
@@ -404,6 +406,7 @@ fun SettingsScreen(
     val onDisclaimerClick: () -> Unit = { showReleaseDisclaimerDialog = true }
     val onBlockedListClickAction: () -> Unit = { showBlockedList = true }
     val onCommentFraudHistoryClickAction: () -> Unit = { showCommentFraudHistory = true }
+    val onCommentIpWhitelistClickAction: () -> Unit = { showCommentIpWhitelist = true }
     suspend fun runUpdateCheck(
         silent: Boolean,
         shouldOpenReleaseNotes: Boolean = false
@@ -687,6 +690,7 @@ fun SettingsScreen(
         showUpdateResult = updateCheckResult != null,
         showChangelogResult = changelogCheckResult != null,
         showBlockedList = showBlockedList,
+        showCommentIpWhitelist = showCommentIpWhitelist,
     )
     SettingsLocalBackHandler(enabled = settingsBackTarget != SettingsBackTarget.NONE) {
         when (settingsBackTarget) {
@@ -707,6 +711,7 @@ fun SettingsScreen(
             SettingsBackTarget.UPDATE_RESULT -> updateCheckResult = null
             SettingsBackTarget.CHANGELOG_RESULT -> changelogCheckResult = null
             SettingsBackTarget.BLOCKED_LIST -> showBlockedList = false
+            SettingsBackTarget.COMMENT_IP_WHITELIST -> showCommentIpWhitelist = false
         }
     }
 
@@ -716,6 +721,8 @@ fun SettingsScreen(
             BlockedListScreen(onBack = { showBlockedList = false })
         } else if (showCommentFraudHistory) {
             CommentFraudHistoryScreen(onBack = { showCommentFraudHistory = false })
+        } else if (showCommentIpWhitelist) {
+            CommentIpWhitelistScreen(onBack = { showCommentIpWhitelist = false })
         } else {
         // Layout Switching
         Box(
@@ -775,6 +782,7 @@ fun SettingsScreen(
                     onOpenLinksClick = onOpenLinksAction,
                     onBlockedListClick = onBlockedListClickAction,
                     onCommentFraudHistoryClick = onCommentFraudHistoryClickAction,
+                    onCommentIpWhitelistClick = onCommentIpWhitelistClickAction,
                     onPrivacyModeChange = onPrivacyModeChange,
                     onSearchSuggestionsChange = onSearchSuggestionsChange,
                     onPrivacyContentAuthenticationChange = onPrivacyContentAuthenticationChange,
@@ -950,6 +958,7 @@ private fun MobileSettingsNavLayout(
     onOpenLinksClick: () -> Unit,
     onBlockedListClick: () -> Unit,
     onCommentFraudHistoryClick: () -> Unit,
+    onCommentIpWhitelistClick: () -> Unit,
     onPrivacyModeChange: (Boolean) -> Unit,
     onSearchSuggestionsChange: (Boolean) -> Unit,
     onPrivacyContentAuthenticationChange: (Boolean) -> Unit,
@@ -1033,6 +1042,7 @@ private fun MobileSettingsNavLayout(
         onMessageNotificationClick = onMessageNotificationClick,
         onBlockedListClick = onBlockedListClick,
         onCommentFraudHistoryClick = onCommentFraudHistoryClick,
+        onCommentIpWhitelistClick = onCommentIpWhitelistClick,
         onPluginsClick = onPluginsClick,
         onExportLogsClick = onExportLogsClick,
         onSettingsShareClick = onSettingsShareClick,

@@ -477,6 +477,7 @@ internal fun VideoInlineSubReplyDetailContent(
         onAvatarClick = onAvatarClick,
         maxTimestampMs = maxTimestampMs,
         targetReplyId = state.targetReplyId,
+        filteredItemCount = state.filteredItemCount,
         modifier = modifier,
     )
 }
@@ -519,6 +520,7 @@ internal fun SubReplyDetailContent(
     maxTimestampMs: Long? = null,
     remoteReplyCount: Int = 0,
     targetReplyId: Long = 0,
+    filteredItemCount: Int = 0,
     headerDragModifier: Modifier = Modifier,
     modifier: Modifier = Modifier,
 ) {
@@ -856,6 +858,12 @@ internal fun SubReplyDetailContent(
                             color = appearance.dividerColor
                         )
                     }
+                }
+            }
+
+            if (filteredItemCount > 0) {
+                item(key = "subreply_ip_filter_notice") {
+                    CommentIpFilterNotice(hiddenCount = filteredItemCount)
                 }
             }
 

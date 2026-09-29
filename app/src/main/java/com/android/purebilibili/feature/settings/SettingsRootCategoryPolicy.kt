@@ -113,6 +113,7 @@ internal fun resolveSettingsRootCategoryForSearchTarget(
     SettingsSearchTarget.PRIVACY_PERMISSION,
     SettingsSearchTarget.PERMISSION,
     SettingsSearchTarget.BLOCKED_LIST,
+    SettingsSearchTarget.COMMENT_IP_WHITELIST,
     SettingsSearchTarget.MESSAGE_NOTIFICATION -> SettingsRootCategory.PRIVACY_PERMISSION
 
     SettingsSearchTarget.DATA_BACKUP,

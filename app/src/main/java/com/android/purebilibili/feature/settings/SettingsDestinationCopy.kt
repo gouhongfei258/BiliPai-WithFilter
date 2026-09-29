@@ -84,6 +84,10 @@ internal fun settingsDestinationCopy(target: SettingsSearchTarget): SettingsDest
         title = "黑名单管理",
         summary = "管理已屏蔽的 UP 主",
     )
+    SettingsSearchTarget.COMMENT_IP_WHITELIST -> SettingsDestinationCopy(
+        title = "评论 IP 属地白名单",
+        summary = "仅显示指定地区用户的评论",
+    )
     SettingsSearchTarget.SETTINGS_SHARE -> SettingsDestinationCopy(
         title = "设置分享",
         summary = "导出并导入可分享设置",

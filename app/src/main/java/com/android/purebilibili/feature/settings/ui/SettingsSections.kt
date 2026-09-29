@@ -130,6 +130,7 @@ internal data class SettingsRootCategoryActions(
     val onMessageNotificationClick: () -> Unit,
     val onBlockedListClick: () -> Unit,
     val onCommentFraudHistoryClick: () -> Unit,
+    val onCommentIpWhitelistClick: () -> Unit,
     val onPluginsClick: () -> Unit,
     val onExportLogsClick: () -> Unit,
     val onSettingsShareClick: () -> Unit,
@@ -541,7 +542,8 @@ internal fun SettingsRootCategoryContent(
                             onPermissionClick = actions.onPermissionClick,
                             onMessageNotificationClick = actions.onMessageNotificationClick,
                             onBlockedListClick = actions.onBlockedListClick,
-                            onCommentFraudHistoryClick = actions.onCommentFraudHistoryClick // [New]
+                            onCommentFraudHistoryClick = actions.onCommentFraudHistoryClick, // [New]
+                            onCommentIpWhitelistClick = actions.onCommentIpWhitelistClick // [New]
                         )
                     }
                 }
@@ -772,7 +774,8 @@ internal fun SettingsRootCategoryContent(
                             onPermissionClick = actions.onPermissionClick,
                             onMessageNotificationClick = actions.onMessageNotificationClick,
                             onBlockedListClick = actions.onBlockedListClick,
-                            onCommentFraudHistoryClick = actions.onCommentFraudHistoryClick // [New]
+                            onCommentFraudHistoryClick = actions.onCommentFraudHistoryClick, // [New]
+                            onCommentIpWhitelistClick = actions.onCommentIpWhitelistClick // [New]
                         )
                     }
                 }
@@ -1267,18 +1270,21 @@ fun PrivacySection(
     onPermissionClick: () -> Unit,
     onMessageNotificationClick: () -> Unit,
     onBlockedListClick: () -> Unit, // [New]
-    onCommentFraudHistoryClick: () -> Unit // [New]
+    onCommentFraudHistoryClick: () -> Unit, // [New]
+    onCommentIpWhitelistClick: () -> Unit // [New]
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val searchHintEnabled by remember(context) {
         com.android.purebilibili.core.store.SearchHintSettingsStore.isEnabled(context)
     }.collectAsStateWithLifecycle(initialValue = true)
-    val siblingTints = remember { resolveSettingsSiblingIconTints(4, paletteOffset = 4) }
+    val siblingTints = remember { resolveSettingsSiblingIconTints(5, paletteOffset = 4) }
     val permissionVisual = rememberSettingsEntryVisual(SettingsSearchTarget.PERMISSION)
     val messageNotificationVisual =
         rememberSettingsEntryVisual(SettingsSearchTarget.MESSAGE_NOTIFICATION)
     val blockedListVisual = rememberSettingsEntryVisual(SettingsSearchTarget.BLOCKED_LIST)
+    val commentIpWhitelistVisual =
+        rememberSettingsEntryVisual(SettingsSearchTarget.COMMENT_IP_WHITELIST)
     val visibilityOffIcon = rememberSettingsSemanticIcon(SettingsIconRole.PRIVACY_HISTORY)
     val contentAuthenticationIcon = rememberSettingsSemanticIcon(
         SettingsIconRole.PRIVACY_CONTENT_AUTHENTICATION,
@@ -1350,6 +1356,15 @@ fun PrivacySection(
             value = settingsDestinationCopy(SettingsSearchTarget.BLOCKED_LIST).summary,
             onClick = onBlockedListClick,
             iconTint = siblingTints[3]
+        )
+        SettingsAdaptiveDivider()
+        SettingClickableItem(
+            icon = commentIpWhitelistVisual.icon,
+            iconPainter = commentIpWhitelistVisual.iconResId?.let { painterResource(id = it) },
+            title = settingsDestinationCopy(SettingsSearchTarget.COMMENT_IP_WHITELIST).title,
+            value = settingsDestinationCopy(SettingsSearchTarget.COMMENT_IP_WHITELIST).summary,
+            onClick = onCommentIpWhitelistClick,
+            iconTint = siblingTints[4]
         )
         SettingsAdaptiveDivider()
         SettingClickableItem(
