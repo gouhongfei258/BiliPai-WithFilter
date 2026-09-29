@@ -33,7 +33,8 @@ class CommentIpLocationFilterPolicyTest {
 
     @Test
     fun `whitelist entries are deduplicated and order preserved`() {
-        assertEquals(listOf("北京", "上海"), parseCommentIpWhitelist("上海, 北京, 上海"))
+        // 去重保留首次出现的顺序：上海先出现，因此排在前面。
+        assertEquals(listOf("上海", "北京"), parseCommentIpWhitelist("上海, 北京, 上海"))
     }
 
     @Test
